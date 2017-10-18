@@ -19,7 +19,7 @@ packages.loader <- function(packages.list){
 } # end functions packages.loader
 packages.list = c("readr",                                                      # Read csv files form ZIP
                   "tidyverse","magrittr","forcats",                             # Data frames toolbox
-                  #"snow","doSNOW","doRNG","doParallel","foreach",              # Parallel computing
+                  "snow","doSNOW","doRNG","doParallel","foreach",               # Parallel computing
                   "ROCR")                                                       # Visualizing the Performance of Scoring Classifiers
 packages.loader(packages.list)
 

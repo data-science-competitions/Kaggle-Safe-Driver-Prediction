@@ -36,26 +36,6 @@ train = as.data.frame(subset(all_data, set %in% 1, select=-set))
 test = as.data.frame(subset(all_data, set %in% 2, select=-set))
 
 
-##################
-# Split the Data #
-##################
-frac_tr = 0.5
-frac_te = 0.3
-#' all_data = train U test
-#' train = X_tr U X_te U X_va
-set.seed(GLOBALS[["local_evaluation_seed"]])
-shuffled_index = sample(nrow(train))
-train_index = sample(shuffled_index, round(length(shuffled_index)*frac_tr))
-shuffled_index = setdiff(shuffled_index,train_index)
-test_index = sample(shuffled_index, round(length(shuffled_index)*frac_te))
-validation_index = setdiff(shuffled_index,test_index)
-
-X_tr = train[train_index,]
-X_te = train[test_index,]
-X_va = train[validation_index,]
-
-
 rm(path.codebook, path.train, path.test, 
-   frac_te, frac_tr, var_name, var_names, var_type,
-   shuffled_index, train_index, test_index, validation_index,
+   var_name, var_names, var_type,
    codebook, all_data)
