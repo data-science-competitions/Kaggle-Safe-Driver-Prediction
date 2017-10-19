@@ -12,6 +12,8 @@ file_path_Y = file.path(getwd(),"pred","(boosted_glm)(nboot=200)(y_test).csv.gz"
 file_path_t = file.path(getwd(),"pred","(boosted_glm)(nboot=200)(cutoffs).csv")
 Y_hat = read.csv(file_path_Y)
 cutoffs = read.csv(file_path_t)
+row.names(cutoffs) = as.character(cutoffs[,1])
+cutoffs = cutoffs[,-1]
 ```
 
 ```{r helper_functions, echo=FALSE}
@@ -43,7 +45,7 @@ NormalizedGini <- function(data, lev=NULL, model=NULL) {
 # Correlation Plots
 
 ```{r calculate_performance_measures, echo=FALSE, results='as.is'}
-criteria = c("Gini","Accuracy","Precision","F1","Recall")
+criteria = c("Gini","Accuracy","Recall","Precision","F1")
 scores = data.frame(row.names=1:ncol(Y_hat[,-1]))
 # Calculate the Gini coefficient
 scores$Gini = apply(Y_hat[,-1], 2, 
@@ -55,6 +57,15 @@ scores$AUC = apply(Y_hat[,-1], 2,
                        perf_AUC = ROCR::performance(pred,"auc")
                        return(perf_AUC@y.values[[1]])
                    })
+# Calculate Recall
+for(i in 1:nrow(scores)){
+    pred = ROCR::prediction(predictions=Y_hat[,i+1],labels=Y_hat[,1])
+    perf_Recall = ROCR::performance(pred,"rec")
+    which(unlist(perf_Recall@x.values) - cutoffs[i+1,"F1"]
+    scores[i,"Recall"] = Y_hat[,1]
+}
+
+
 # Calculate precision-recall break-even point (PRBEP)
 scores$PRBEP = apply(Y_hat[,-1], 2, 
                      function(x) {
