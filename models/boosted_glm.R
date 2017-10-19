@@ -9,7 +9,7 @@
 #########
 # Setup #
 #########
-nboot = 8 # number of bootstrap samples
+nboot = 200 # number of bootstrap samples
 seed_number = 1816
 f <- formula(paste(target_var_name,"~. -id"))
 
