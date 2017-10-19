@@ -3,6 +3,16 @@
 ################################################################################
 all_data = bind_rows(train, test, .id="set")
 
+
+#######################
+# Feature Engineering #
+#######################
+# Add the number of NA values for each id (not including the target variable)
+all_data$na_counter = rowSums(
+    is.na(all_data[,!colnames(all_data) %in% target_var_name])
+)
+
+
 ##################
 # Developer Zone #
 ##################
