@@ -1,0 +1,88 @@
+---
+title: "Performance Measures Relationships"
+author: "Harel Lustiger"
+date: "October, 2017"
+output: html_notebook
+---
+
+```{r get_the_data, include=FALSE, cache=FALSE}
+lapply(c("ROCR"), library, character.only = TRUE)
+setwd('..')
+file_path_Y = file.path(getwd(),"pred","(boosted_glm)(nboot=200)(y_test).csv.gz")
+file_path_t = file.path(getwd(),"pred","(boosted_glm)(nboot=200)(cutoffs).csv")
+Y_hat = read.csv(file_path_Y)
+cutoffs = read.csv(file_path_t)
+```
+
+```{r helper_functions, echo=FALSE}
+# Gini code from kaggle
+SumModelGini <- function(solution, submission) {
+    df = data.frame(solution = solution, submission = submission)
+    df <- df[order(df$submission, decreasing = TRUE),]
+    df$random = (1:nrow(df))/nrow(df)
+    totalPos <- sum(df$solution)
+    df$cumPosFound <- cumsum(df$solution) # this will store the cumulative number of positive examples found (used for computing "Model Lorentz")
+    df$Lorentz <- df$cumPosFound / totalPos # this will store the cumulative proportion 
+    # of positive examples found ("Model Lorentz")
+    df$Gini <- df$Lorentz - df$random   # will store Lorentz minus random
+    return(sum(df$Gini))
+}# SumModelGini()
+
+#' @title Custom metric for the caret package
+#' @example trainControl(method="repeatedcv", number=3, repeats=1,
+#'                       summaryFunction=NormalizedGini, verboseIter=TRUE) 
+NormalizedGini <- function(data, lev=NULL, model=NULL) {
+    solution=data$obs
+    submission=data$pred
+    result=SumModelGini(solution, submission) / SumModelGini(solution, solution)
+    names(result) <- "Gini"
+    return(result)
+}# NormalizedGini()
+```
+
+# Correlation Plots
+
+```{r calculate_performance_measures, echo=FALSE, results='as.is'}
+criteria = c("Gini","Accuracy","Precision","F1","Recall")
+scores = data.frame(row.names=1:ncol(Y_hat[,-1]))
+# Calculate the Gini coefficient
+scores$Gini = apply(Y_hat[,-1], 2, 
+                    function(x) SumModelGini(solution=Y_hat[,1], submission=x))
+# Calculate AUC
+scores$AUC = apply(Y_hat[,-1], 2, 
+                   function(x) {
+                       pred = ROCR::prediction(predictions=x,labels=Y_hat[,1])
+                       perf_AUC = ROCR::performance(pred,"auc")
+                       return(perf_AUC@y.values[[1]])
+                   })
+# Calculate precision-recall break-even point (PRBEP)
+scores$PRBEP = apply(Y_hat[,-1], 2, 
+                     function(x) {
+                         pred = ROCR::prediction(predictions=x,labels=Y_hat[,1])
+                         perf_PRBEP = ROCR::performance(pred,"prbe")
+                         return(max(unlist(perf_PRBEP@y.values)))
+                     })
+# curve_PRBEP = ROCR::performance(pred, measure="rec", x.measure="prec")
+# plot(curve_PRBEP)
+```
+
+```{r correlation_plots, echo=FALSE}
+par(pty="s", mfrow=c(1,2))
+for(criterion in c("AUC","PRBEP")){
+    # 1. Build the plot structure
+    plot(scores[,criterion], scores[,"Gini"], type="n",
+         ylab="Gini", xlab=criterion,
+         main=paste0("Gini as a function of ",criterion))
+    # 2. Plot the data points
+    # Option A: as numbers
+    #text(scores[,criterion], scores[,"Gini"], as.character(1:nrow(scores)), col="blue")
+    # Option B: as points
+    points(scores[,criterion], scores[,"Gini"], pch=16, col="blue")
+    # 3. The regression line
+    abline(lm(scores[,"Gini"]~scores[,criterion]), col="red") # regression line (y~x)
+    text(mean(range(scores[,criterion])),
+         mean(range(scores[,"Gini"])),
+         paste("r =",with(scores,round(cor(scores[,criterion],Gini),2))),
+         col="red", cex=2) 
+}
+```
