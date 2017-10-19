@@ -81,8 +81,8 @@ colnames(Cutoffs) = paste0("mdl_",1:nboot)
 stopifnot(!any(is.na(Y_hat_te)),!any(is.na(Cutoffs)))
 file_name = file.path(getwd(),"pred",
                       paste0("(","boosted_glm",")","(","nboot=",nboot,")"))
-write.csv(cbind(mdl_0=as.numeric(X_te[,target_var_name])-1,Y_hat_te), 
-          paste0(file_name,"(y_test)",".csv"), row.names=FALSE)
+write_csv(cbind(mdl_0=as.numeric(X_te[,target_var_name])-1,Y_hat_te), 
+          gzfile(paste0(file_name,"(y_test)",".csv.gz")))
 write.csv(Cutoffs, 
           paste0(file_name,"(cutoffs)",".csv"), row.names=TRUE)
 
