@@ -45,28 +45,33 @@ NormalizedGini <- function(data, lev=NULL, model=NULL) {
 # Correlation Plots
 
 ```{r calculate_performance_measures, echo=FALSE, results='as.is'}
-criteria = c("Gini","Accuracy","Recall","Precision","F1")
+criteria = c("Gini","AUC","Recall","Precision","PRBEP")
 scores = data.frame(row.names=1:ncol(Y_hat[,-1]))
-# Calculate the Gini coefficient
+# 1. Calculate the Gini coefficient
 scores$Gini = apply(Y_hat[,-1], 2, 
                     function(x) SumModelGini(solution=Y_hat[,1], submission=x))
-# Calculate AUC
+# 2. Calculate AUC
 scores$AUC = apply(Y_hat[,-1], 2, 
                    function(x) {
                        pred = ROCR::prediction(predictions=x,labels=Y_hat[,1])
                        perf_AUC = ROCR::performance(pred,"auc")
                        return(perf_AUC@y.values[[1]])
                    })
-# Calculate Recall
+# 3. Calculate Recall
 for(i in 1:nrow(scores)){
     pred = ROCR::prediction(predictions=Y_hat[,i+1],labels=Y_hat[,1])
     perf_Recall = ROCR::performance(pred,"rec")
-    which(unlist(perf_Recall@x.values) - cutoffs[i+1,"F1"]
-    scores[i,"Recall"] = Y_hat[,1]
+    x = which.min(abs(unlist(perf_Recall@x.values) - cutoffs["F1",paste0("mdl_",i)]))
+    scores[i,"Recall"] = unlist(perf_Recall@y.values)[x]
 }
-
-
-# Calculate precision-recall break-even point (PRBEP)
+# 4. Calculate Precision
+for(i in 1:nrow(scores)){
+    pred = ROCR::prediction(predictions=Y_hat[,i+1],labels=Y_hat[,1])
+    perf_Precision = ROCR::performance(pred,"prec")
+    x = which.min(abs(unlist(perf_Recall@x.values) - cutoffs["F1",paste0("mdl_",i)]))
+    scores[i,"Precision"] = unlist(perf_Recall@y.values)[x]
+}
+# 5. Calculate precision-recall break-even point (PRBEP)
 scores$PRBEP = apply(Y_hat[,-1], 2, 
                      function(x) {
                          pred = ROCR::prediction(predictions=x,labels=Y_hat[,1])
@@ -78,8 +83,8 @@ scores$PRBEP = apply(Y_hat[,-1], 2,
 ```
 
 ```{r correlation_plots, echo=FALSE}
-par(pty="s", mfrow=c(1,2))
-for(criterion in c("AUC","PRBEP")){
+par(pty="s", mfrow=c(2,2))
+for(criterion in c("AUC","PRBEP","Recall","Precision")){
     # 1. Build the plot structure
     plot(scores[,criterion], scores[,"Gini"], type="n",
          ylab="Gini", xlab=criterion,
