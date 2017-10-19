@@ -22,5 +22,5 @@ source("src/split_the_data.R")
 
 # 6. Model Fitting
 source("models/boosted_glm.R")
-
+source("models/boosted_rf.R")
 
