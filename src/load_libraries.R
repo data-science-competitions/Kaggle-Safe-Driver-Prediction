@@ -1,6 +1,7 @@
-################################################################################
-#                                Load Libraries                                #
-################################################################################
+#' ---
+#' title: "Load Libraries"
+#' author: "Harel Lustiger"
+#' ---
 # 1. Add any project specific configuration here.
 Sys.setlocale("LC_TIME", "English") # uses english opertaing system naming 
 # convention

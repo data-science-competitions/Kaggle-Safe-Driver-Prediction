@@ -1,6 +1,7 @@
-################################################################################
-#                                 Boosted GLM                                  #
-################################################################################
+#' ---
+#' title: "Boosted GLMs"
+#' author: "Harel Lustiger"
+#' ---
 #' Main Features:
 #' * Custom framework
 #' * Using bootstrap resampling as an evaluation schema

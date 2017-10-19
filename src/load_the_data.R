@@ -1,6 +1,7 @@
-################################################################################
-#                                Load the Data                                 #
-################################################################################
+#' ---
+#' title: "Load the Data"
+#' author: "Harel Lustiger"
+#' ---
 target_var_name = "target" 
 path.codebook = file.path(getwd(),"data","codebook.csv")
 path.train = file.path(getwd(),"data","train.zip")
