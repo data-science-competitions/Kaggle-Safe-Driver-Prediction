@@ -3,24 +3,61 @@ title: 'The Gini Coefficient under Binary Classification Problems'
 subtitle: 'Theory and Practice'
 author: "Harel Lustiger"
 date: "October, 2017"
-output: ioslides_presentation
+output: 
+  ioslides_presentation: 
+    highlight: tango
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+# Objective and Key Points
 
-This is an R Markdown presentation. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Context
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+**Featured Prediction Competition:**   
+[Porto Seguro’s Safe Driver Prediction](https://www.kaggle.com/c/porto-seguro-safe-driver-prediction).
 
-## Slide with Bullets
+**Problem:**  
+Predict if a driver will file an insurance claim next year.
 
-- Bullet 1
-- Bullet 2
-- Bullet 3
+**Objective:**  
+Maximize the (Normalized ) Gini Coefficient. 
+
+**Prediction Type**
+Classificaton with emphasize on *ranking classifiers*.
+
+## Main Points
+
+1. What are the relationships between Gini and and other criteria?
+2. How does Gini behaive under unbalanced target variable?
+3. How can we elicit more infromation from Gini?
+
+## Key Attributes of the Target Variable
+
+* The target variable has two states  
+* The target variable is skewed.
+
+## Assumptions
+
+The train and test sets were drawn from the same **underlying distribution**.
+
+IMAGE
+
+Projecting the data into 2D space, and visual inspection suggest that this 
+assumption is valid.
+
+
+## Narrative
+
+1. Key observation about the target variable (+hidden assumption)
+2. Ontology of Performance Measures (where AUC, F-Score and why would would we Gini)
+    * Graphical Preformance Measures
+    * Ranking Performance Measures vs. Confusion Table
+    * Performance Measures for Unbalaned target variable
+    * SELECTED PERFORMANCE MEASUREAS ATTRIBUTE TABLE (Comparison)
+3. 
 
 ## Slide with R Output
 
