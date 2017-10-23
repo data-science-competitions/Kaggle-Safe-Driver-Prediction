@@ -2,6 +2,7 @@
 #' title: "GBM with Different Objective Functions"
 #' author: "Harel Lustiger"
 #' ---
+# <https://gist.github.com/mndrake/7105b93d71ace38dc42b>
 
 
 #########
@@ -19,9 +20,13 @@ r_s = table(X_tr[,target_var_name])["0"]/table(X_tr[,target_var_name])["1"]
 #######################
 dX_tr = xgb.DMatrix(data=as.matrix(X_tr[,-2:-1]),
                     label=as.numeric(as.character(X_tr[,2])))
+dX_ev = xgb.DMatrix(data=as.matrix(X_ev[,-2:-1]),
+                    label=as.numeric(as.character(X_ev[,2])))
 dX_te = xgb.DMatrix(data=as.matrix(X_te[,-2:-1]),
                     label=as.numeric(as.character(X_te[,2])))
-watchlist <- list(train=dX_tr, test=dX_te)
+dX_va = xgb.DMatrix(data=as.matrix(X_va[,-2:-1]),
+                    label=as.numeric(as.character(X_va[,2])))
+watchlist <- list(train=dX_tr, test=dX_ev)
 
 
 ##########################
@@ -30,15 +35,24 @@ watchlist <- list(train=dX_tr, test=dX_te)
 model <- xgb.train(data=dX_tr,
                    # Parameter for Tree Booster
                    max_depth=6,
-                   eta=0.1,
-                   nrounds=100, 
+                   eta=0.01,
+                   subsample=1,
+                   # Early Stopping to Avoid Overfitting
+                   early_stopping_rounds=10,
+                   watchlist=watchlist,
+                   nrounds=1e3,
                    # Task Parameters
                    objective="binary:logistic",
+                   eval_metric=c("error",paste0("error@",round(1/r_s,3)),"auc","map","rmse","mlogloss")[3],
                    # Information
-                   eval_metric=c("error",paste0("error@",round(1/r_s,3)),"auc","map","rmse","mlogloss")[2],
-                   watchlist=watchlist,
                    verbose=1, print_every_n=10L,
                    seed=1137)
+
+
+##############################
+# Predict the Validation Set #
+##############################
+pred <- predict(model, dX_te)
 
 
 
