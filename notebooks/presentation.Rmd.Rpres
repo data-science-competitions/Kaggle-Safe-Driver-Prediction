@@ -7,44 +7,159 @@ transition: none
 css: custom.css
 
 
-
 Introduction
 ========================================================
 type: section
 
 
-Real World Example: Me, Gaerem Hart and Gini
+Real World Example
+========================================================
+id: real_world_example
+type: sub-section
+
+
+>> New Zealand's Jacinda Ardern sets out priorities: climate, `inequality` and 
+women.
+
+What should we measure to determine if social inequality was tackled 
+successfully by the end of the PM term?
+
+<green>&#x2192; Suggestion: The Gini Coefficient</green>
+
+
+Graphical representation of Gini, Gaerem Hart and Me
 ========================================================
 type: sub-section
 title: false
 
-![alt text](images/Me_Gaerem_Hart_and_Gini.png)
+![alt text](images/gini_graphical_representation.png)
 
+<!-- 
+NOTES:
+* This is a graphical representation of Gini, rather than a scalar
+* The y-axis is measures a continuous variable
+-->
 
-Slide With Code
+Objective and Key Points
 ========================================================
-type: prompt
+type: section
 
-```{r}
-summary(cars)
-```
-
-Slide With Plot
+Main Points
 ========================================================
+type: sub-section
+
+1. What are the relationships between Gini and and other criteria?
+2. How does Gini behaive under unbalanced target variable?
+3. How can we elicit more infromation from Gini?
+
+Context
+========================================================
+type: sub-section
+
+**Featured Prediction Competition:**   
+[Porto Seguro’s Safe Driver Prediction](https://www.kaggle.com/c/porto-seguro-safe-driver-prediction).
+
+**Problem:**  
+Predict if a driver will file an insurance claim next year.
+
+**Objective:**  
+Maximize the (Normalized) Gini Coefficient. 
+
+**Prediction Type**  
+Classificaton with emphasize on *scoring classifiers*.
+
+<!-- 
+NOTES:
+
+One observation worth making in the current competition is that the classifier 
+scores need to be only relative.
+
+Neither us nor the competition's organizers are going to threshold the scores
+into a confusion matrix and derive from it the winning submission.
+-->
+
+Scoring Classifiers
+========================================================
+type: section
+
+What is Scoring?
+========================================================
+id: what_is_scoring
+type: sub-section
 
 ```{r, echo=FALSE}
-plot(cars)
+n = 6 # for simplicity, choose an even number
 ```
 
+Given `r n` members from the insurance company database and their *true future 
+claim result*, we obserbe two algorithms outputs:  
 
-```{r developer_zone, echo=FALSE, eval=FALSE}
-library(rsconnect)
-result = rpubsUpload("The Gini Coefficient under Binary Classification Problems",
-                     contentFile=file.path(getwd(),"notebooks","presentation.Rmd.html"),
-                     originalDoc=file.path(getwd(),"notebooks","presentation.Rmd"),
-                     id="https://api.rpubs.com/api/v1/document/321511/7b8843edabc74d3b83e99f2dd03c8909")
-print(result$id)
-# <https://support.rstudio.com/hc/en-us/articles/200486468>.
+```{r scoring_example, echo=FALSE, results='asis'}
+set.seed(1547)
+member_name = toupper(letters[1:n])
+member_result = gl(2,round(n/2), labels=c("No","Yes"))
+algorithm_score_1 = 1:n
+algorithm_score_2 = c(sample(1:(n/2), n/2),
+                      sample((1+n/2):n, n/2))
+example = data.frame("Member Name"=member_name,
+                     "Ground Truth"=member_result,
+                     "1st Algorithm Score"=algorithm_score_1,
+                     "2nd Algorithm Score"=algorithm_score_2,
+                     check.names=F)
+knitr::kable(example, format="markdown", align="c")
 ```
 
+Are the two algorithms' **scores** the same? **YES**, both would yield the same Gini 
+coeff value
 
+Are the two algorithms' **ranks** the same? **NO**, but who cares?!
+
+<!--
+Note that utilizing ranking algorithms can be a substitude for scoring 
+algorithms, but the opposite does not necessarily hold.
+-->
+
+
+Scoring: Takeaways
+========================================================
+id: scoring_the_takeaways
+type: sub-section
+
+* The algorithms need <red>not</red> rank all the instances in a desired order. 
+What is important is that the positive instances are generally ranked higher
+than the negative ones.
+* The scores need <red>not</red> be in any predefined intervals, nor be 
+likelihoods or probabilities over class memberships.
+* The overall hope is that the classifier typically scores the positive examples
+higher than the negative examples.
+
+<green>&#x2192; The door for regression algorithms and their objective functions
+is open.<green/>
+
+
+Key Attributes of the Target Variable
+========================================================
+id: key_attributes_of_y
+type: alert
+
+<!-- prompt / alert -->
+
+* The target variable has two states, '0' and '1'.  
+* The target variable is skewed, while we are eager to find the rare class.
+
+```{r, echo=FALSE, results='as.is'}
+tab = data.frame("0"=573518, "1"=21694, check.names=FALSE)
+tab[2,1] = round(100*573518/(573518+21694))
+tab[2,2] = 100-tab[2,1]
+rownames(tab) = c("Frequency","Proportion")
+knitr::kable(tab, format="markdown", align="c", row.names=TRUE)
+```
+
+**Why is it important?**
+
+Supervised learning rests on the assumption that the initial training set is 
+going to produce a useful model for discriminating between classes.
+
+Furthermore, in their basic form, most classifiers do not behave well on 
+unbalanced data sets. Instead, most classifiers have predictive preference for 
+the class with the greater proportion of examples.
