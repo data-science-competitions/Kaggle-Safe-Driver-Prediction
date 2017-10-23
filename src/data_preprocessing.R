@@ -47,4 +47,4 @@ train = as.data.frame(subset(all_data, set %in% 1, select=-set))
 test = as.data.frame(subset(all_data, set %in% 2, select=-set))
 # 
 # 
-rm(col_name, col_names, all_data)
+rm(all_data)

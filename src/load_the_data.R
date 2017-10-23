@@ -30,6 +30,21 @@ for(var_name in var_names){
 }# end changing cols types
 
 
+##############################################
+# Detect Missing Values in Numeric Variables #
+##############################################
+#' In this competition, -1 represents missing values. 
+#' Therefore, we change -1 to NA.
+for(var_name in var_names){
+    
+    var_type = subset(codebook, name %in% var_name, select=type)
+    
+    if(var_type=="numeric")
+        all_data[all_data[[var_name]] %in% -1,var_name] <- NA
+    
+}# end changing -1 to NA
+
+
 ####################################
 # Revert to the Original Stracture #
 ####################################
