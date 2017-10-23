@@ -1,0 +1,149 @@
+---
+title: 'The Gini Coefficient under Binary Classification Problems'
+subtitle: 'Theory and Practice'
+author: "Harel Lustiger"
+date: "October, 2017"
+output: 
+  ioslides_presentation: 
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+<style>
+div.footnotes {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 10px;
+  width: 80%;
+  font-size: 0.6em;
+}
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('slide:not(.backdrop):not(.title-slide)').append('<div class=\"footnotes\">');
+
+  $('footnote').each(function(index) {
+    var text  = $(this).html();
+    var fnNum = (index+1).toString();
+    $(this).html(fnNum.sup());
+
+    var footnote   = fnNum + '. ' + text + '<br/>';
+    var oldContent = $(this).parents('slide').children('div.footnotes').html();
+    var newContent = oldContent + footnote;
+    $(this).parents('slide').children('div.footnotes').html(newContent);
+  });
+});
+</script>
+
+
+# Introduction
+
+## Real World Example
+
+>> New Zealand's Jacinda Ardern sets out priorities: climate, `inequality` and 
+women.<footnote>[The Guardian, October 2017](http://bit.ly/2xbxxwI)</footnote>
+
+What should we measure to determine if social inequality was tackled 
+successfully by the end of the PM term?
+
+- Suggestion: The Gini Coefficient
+
+## The Gini Coefficient
+
+![gini and Graeme Hart](images/Gini_and_Graeme_Hart.jpg)
+
+(me)(Graeme Hart)
+
+
+
+
+
+# Objective and Key Points
+
+## Context
+
+**Featured Prediction Competition:**   
+[Porto Seguro’s Safe Driver Prediction](https://www.kaggle.com/c/porto-seguro-safe-driver-prediction).
+
+**Problem:**  
+Predict if a driver will file an insurance claim next year.
+
+**Objective:**  
+Maximize the (Normalized) Gini Coefficient. 
+
+**Prediction Type**
+Classificaton with emphasize on *ranking classifiers*.
+
+## Main Points
+
+1. What are the relationships between Gini and and other criteria?
+2. How does Gini behaive under unbalanced target variable?
+3. How can we elicit more infromation from Gini?
+
+## Key Attributes of the Target Variable
+
+* The target variable has two states  
+* The target variable is skewed.
+
+## Assumptions
+
+The train and test sets were drawn from the same **underlying distribution**.
+
+IMAGE
+
+Projecting the data into 2D space, and visual inspection suggest that this 
+assumption is valid.
+
+
+## Narrative
+
+1. Key observation about the target variable (+hidden assumption)
+2. Ontology of Performance Measures (where AUC, F-Score and why would would we Gini)
+    * Graphical Preformance Measures
+    * Ranking Performance Measures vs. Confusion Table
+    * Performance Measures for Unbalaned target variable
+    * SELECTED PERFORMANCE MEASUREAS ATTRIBUTE TABLE (Comparison)
+3. 
+
+
+# Performance Measures
+
+## Gini
+
+`Lenca et al. ([)2004)` proposed five properties to evaluate association 
+measures. The following are the questions and the specific answers for Gini:
+
+* (Q3) Gini increases as the total number of records increases.
+  **No**
+* (O4) Gini remain the same if both the rows and columns are permuted
+
+## AUC
+
+* The relation between the Gini coefficient and the AUC was given by 
+`Hand and Till (2001)`.
+* Elementary geometry shows that $\text{AUC} = \frac{\text{Gini}+1}{2}$
+* In this paper we work in terms of AUC, but the results apply equally to the 
+Gini coefficient.
+
+## Precision
+
+* `Furnkranz and Flach (2005)` proved that Gini is equivalent to precision, in 
+the sense that they give either identical or reverse rankings for any ruleset.
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+

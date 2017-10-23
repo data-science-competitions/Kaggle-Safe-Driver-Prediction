@@ -36,3 +36,5 @@ vignettes/*.pdf
 *.html
 *.gz
 *.dcf
+notebooks/presentation.Rmd-figure/
+*.md
