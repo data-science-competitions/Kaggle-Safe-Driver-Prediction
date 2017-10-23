@@ -21,7 +21,7 @@ packages.loader <- function(packages.list){
 packages.list = c("readr",                                                      # Read csv files form ZIP
                   "tidyverse","magrittr","forcats",                             # Data frames toolbox
                   "snow","doSNOW","doRNG","doParallel","foreach",               # Parallel computing
-                  "randomForest",                                               # Machine Learning algorithms
+                  "randomForest","xgboost",                                     # Machine Learning algorithms
                   "ROCR")                                                       # Visualizing the performance of scoring classifiers
 packages.loader(packages.list)
 
