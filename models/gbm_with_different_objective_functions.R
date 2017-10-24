@@ -11,7 +11,7 @@
 source("src/helper_functions.R")
 nboot = 4 # number of bootstrap samples
 f <- formula(paste(target_var_name,"~. -id"))
-eval_metrics=c("error","error@0.96","auc","map","rmse")
+eval_metrics=c("error","error@0.096","auc","map","rmse")
 objective="binary:logistic"
 tasks = expand.grid(eval_metric=eval_metrics, nboot=1:nboot, 
                     stringsAsFactors=FALSE)
@@ -72,11 +72,22 @@ pred_list <- foreach(i=1:nrow(tasks),
                                             verbose=0, print_every_n=10L,
                                             seed=1257)
                          
-                         # 4. Predict the test set
-                         pred <- predict(model, dX_te)
+                         # 4. Find the F1 threshold
+                         y_hat_bs = predict(model, dX_bs)
+                         pred = prediction(y_hat_bs, X_bs[,target_var_name])
+                         perf = performance(pred, "f") # Precision-recall F measure
+                         F1_cutoff = unlist(perf@x.values)[which.max(unlist(perf@y.values))]
+
+                         # 5. Predict the test set
+                         y_hat_te = predict(model, dX_te)
                          
-                         # 5. Return results
-                         list(k=k, y_hat=round(pred,5))
+                         # 6. Information
+                         seconds_passed = difftime(Sys.time(),start_time,units="secs")
+                         seconds_left = (nrow(tasks)-i) * seconds_passed / i
+                         cat("\t ETA: ",round(seconds_left), " [sec]",sep="")
+                         
+                         # 7. Return results
+                         list(k=k, y_hat=round(y_hat_te,5), F1_cutoff=unname(F1_cutoff))
                      }# end foreach loop
 end_time <- Sys.time()
 stopCluster(cl)
@@ -94,6 +105,7 @@ for(i in 1:nrow(tasks)){
     # Extract Data
     k = pred_list[[i]]$k
     eval_metric = tasks[i,"eval_metric"]
+    cutoff = pred_list[[i]]$F1_cutoff
     
     # Use models with the same (arbitrary) eval metric
     if(eval_metric != eval_metrics[1]) next
