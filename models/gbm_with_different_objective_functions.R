@@ -9,13 +9,13 @@
 # A. Setup #
 ############
 source("src/helper_functions.R")
-nboot = 4 # number of bootstrap samples
+nboot = 200 # number of bootstrap samples
 f <- formula(paste(target_var_name,"~. -id"))
 eval_metrics=c("error","error@0.096","auc","map","rmse")
 objective="binary:logistic"
 tasks = expand.grid(eval_metric=eval_metrics, nboot=1:nboot, 
                     stringsAsFactors=FALSE)
-seed_number = 1252
+seed_number = 2111
 
 
 ##########################
@@ -62,22 +62,22 @@ pred_list <- foreach(i=1:nrow(tasks),
                                             eta=0.01,
                                             subsample=1,
                                             # Early Stopping to Avoid Overfitting
-                                            early_stopping_rounds=10,
+                                            early_stopping_rounds=1e3,
                                             watchlist=watchlist,
-                                            nrounds=1e3,
+                                            nrounds=1e1,
                                             # Task Parameters
                                             objective=objective,
                                             eval_metric=eval_metric,
                                             # Information
                                             verbose=0, print_every_n=10L,
-                                            seed=1257)
+                                            seed=2145)
                          
                          # 4. Find the F1 threshold
                          y_hat_bs = predict(model, dX_bs)
                          pred = prediction(y_hat_bs, X_bs[,target_var_name])
                          perf = performance(pred, "f") # Precision-recall F measure
                          F1_cutoff = unlist(perf@x.values)[which.max(unlist(perf@y.values))]
-
+                         
                          # 5. Predict the test set
                          y_hat_te = predict(model, dX_te)
                          
@@ -96,8 +96,8 @@ stopCluster(cl)
 #########################
 # D. Results Processing #
 #########################
-cor_plot = file.path(getwd(), "(results)(same_obj_func_diff_metric).csv")
-bar_plot = file.path(getwd(), "(results)(diff_obj_func_diff_metric).csv")
+cor_plot = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
+bar_plot = file.path(getwd(),"pred","(results)(diff_obj_func_diff_metric).csv")
 scores = data.frame(matrix(as.numeric(NA),nboot,length(eval_metrics)+1))
 colnames(scores) = c("gini",eval_metrics)
 
@@ -112,10 +112,13 @@ for(i in 1:nrow(tasks)){
     
     # Calculate performance measures
     y_hat = pred_list[[i]]$y_hat
-    pred = ROCR::prediction(predictions=y_hat, labels=X_te[,2])
+    pred = ROCR::prediction(predictions=y_hat, 
+                            labels=as.numeric(as.character(X_te[,2])))
     
     ## GINI
-    scores[k,"gini"] = SumModelGini(solution=y_hat, submission=X_te[,2])
+    y = as.numeric(as.character(X_te[,2]))
+    scores[k,"gini"] = SumModelGini(solution=y, submission=y_hat) / 
+        SumModelGini(solution=y, submission=y)
     
     ## AUC
     if(any(eval_metrics %in% "auc")){
@@ -128,32 +131,37 @@ for(i in 1:nrow(tasks)){
         perf = ROCR::performance(pred,"rmse")
         scores[k,"rmse"] = perf@y.values[[1]]
     }
+    
+    ## PRECISION
+    if(any(eval_metrics %in% "map")){
+        perf = ROCR::performance(pred,"prec")
+        cutoff_index = which.min(abs(perf@x.values[[1]]-cutoff))
+        scores[k,"map"] = perf@y.values[[1]][cutoff_index]
+    }
+    
+    ## ACCURECY
+    if(any(eval_metrics %in% "error")){
+        perf = ROCR::performance(pred,"acc")
+        cutoff_index = which.min(abs(perf@x.values[[1]]-0.5))
+        scores[k,"error"] = perf@y.values[[1]][cutoff_index]
+    }
+    
+    ## (skew-sensitive) ACCURECY
+    if(any(eval_metrics %in% eval_metrics[grep("error@.",eval_metrics)])){
+        eval_metric = eval_metrics[grep("error@.",eval_metrics)]
+        perf = ROCR::performance(pred,"acc")
+        cutoff_index = which.min(abs(perf@x.values[[1]]-cutoff))
+        scores[k,eval_metric] = perf@y.values[[1]][cutoff_index]
+    }
+    
 }# end corr plot
+scores = round(scores,5)
 
 
-# ## 1. Test set predictons
-# Y_hat_te = data.frame(matrix(as.numeric(NA),nrow(X_te),nboot))
-# colnames(Y_hat_te) = paste0("mdl_",1:nboot)
-# for(i in 1:length(pred_list))
-#     Y_hat_te[,i] = unlist(pred_list[[i]]["y_hat_te"])
-# 
-# ## 2. Recall and Precision cutoffs
-# Cutoffs = data.frame()
-# for(i in 1:length(pred_list))
-#     Cutoffs["F1",i] = pred_list[[i]]["F1_cutoff"]
-# colnames(Cutoffs) = paste0("mdl_",1:nboot)
-# 
-# 
-# ######################
-# # Export the results #
-# ######################
-# stopifnot(!any(is.na(Y_hat_te)),!any(is.na(Cutoffs)))
-# file_name = file.path(getwd(),"pred",
-#                       paste0("(","boosted_glm",")","(","nboot=",nboot,")"))
-# write_csv(cbind(mdl_0=as.numeric(X_te[,target_var_name])-1,Y_hat_te), 
-#           gzfile(paste0(file_name,"(y_test)",".csv.gz")))
-# write.csv(Cutoffs, 
-#           paste0(file_name,"(cutoffs)",".csv"), row.names=TRUE)
-# 
-# 
+######################
+# Export the results #
+######################
+write_csv(scores,cor_plot)
+
+
 print(difftime(end_time,start_time))

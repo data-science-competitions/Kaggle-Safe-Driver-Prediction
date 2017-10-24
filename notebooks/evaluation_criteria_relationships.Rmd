@@ -1,0 +1,35 @@
+---
+title: "Performance Measures Relationships"
+author: "Harel Lustiger"
+date: "October, 2017"
+output: html_notebook
+---
+
+```{r get_the_data, include=FALSE}
+lapply(c("ROCR","readr"), library, character.only = TRUE)
+setwd('..')
+file_path = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
+criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
+scores = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))
+```
+
+# Correlation Plots
+
+```{r correlation_plots, echo=FALSE}
+par(pty="s", mfrow=c(2,2))
+for(criterion in c("Accuracy","AUC","Precision","RMSE")){
+    # 1. Build the plot structure
+    plot(scores[,criterion], scores[,"Gini"], type="n",
+         ylab="Gini", xlab=criterion, #xaxt="n",
+         main=paste0("Gini as a function of ",criterion))
+    # axis(1, at=scores[,criterion], labels=round(scores[,criterion],4))
+    # 2. Plot the data points
+    points(scores[,criterion], scores[,"Gini"], pch=16, col="blue")
+    # 3. The regression line
+    abline(lm(scores[,"Gini"]~scores[,criterion]), col="red") # regression line (y~x)
+    text(mean(range(scores[,criterion])),
+         mean(range(scores[,"Gini"])),
+         paste("r =",with(scores,round(cor(scores[,criterion],Gini),2))),
+         col="red", cex=2) 
+}
+```
