@@ -108,7 +108,7 @@ for(i in 1:nrow(tasks)){
     cutoff = pred_list[[i]]$F1_cutoff
     
     # Use models with the same (arbitrary) eval metric
-    if(eval_metric != eval_metrics[1]) next
+    if(eval_metric != "auc") next
     
     # Calculate performance measures
     y_hat = pred_list[[i]]$y_hat
