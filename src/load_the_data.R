@@ -7,9 +7,9 @@ path.codebook = file.path(getwd(),"data","codebook.csv")
 path.train = file.path(getwd(),"data","train.zip")
 path.test = file.path(getwd(),"data","test.zip")
 
-codebook =  as.data.frame(read_csv(path.codebook))
+codebook = as.data.frame(read_csv(path.codebook))
 train = as.data.frame(read_csv(path.train, na=c("","NA",-1)))
-test =  as.data.frame(read_csv(path.test, na=c("","NA",-1)))
+test = as.data.frame(read_csv(path.test, na=c("","NA",-1)))
 all_data = bind_rows(train, test, .id="set")
 
 
