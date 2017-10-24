@@ -8,7 +8,8 @@
 ############
 # A. Setup #
 ############
-nboot = 200 # number of bootstrap samples
+source("src/helper_functions.R")
+nboot = 4 # number of bootstrap samples
 f <- formula(paste(target_var_name,"~. -id"))
 eval_metrics=c("error","error@0.96","auc","map","rmse")
 objective="binary:logistic"
@@ -53,7 +54,7 @@ pred_list <- foreach(i=1:nrow(tasks),
                          dX_bs = xgb.DMatrix(data=as.matrix(X_bs[,-2:-1]),
                                              label=as.numeric(as.character(X_bs[,2])))
                          watchlist <- list(train=dX_bs, test=dX_ev)
-
+                         
                          # 3. Fit a model to the bootstap set
                          model <- xgb.train(data=dX_bs,
                                             # Parameter for Tree Booster
@@ -84,6 +85,40 @@ stopCluster(cl)
 #########################
 # D. Results Processing #
 #########################
+cor_plot = file.path(getwd(), "(results)(same_obj_func_diff_metric).csv")
+bar_plot = file.path(getwd(), "(results)(diff_obj_func_diff_metric).csv")
+scores = data.frame(matrix(as.numeric(NA),nboot,length(eval_metrics)+1))
+colnames(scores) = c("gini",eval_metrics)
+
+for(i in 1:nrow(tasks)){
+    # Extract Data
+    k = pred_list[[i]]$k
+    eval_metric = tasks[i,"eval_metric"]
+    
+    # Use models with the same (arbitrary) eval metric
+    if(eval_metric != eval_metrics[1]) next
+    
+    # Calculate performance measures
+    y_hat = pred_list[[i]]$y_hat
+    pred = ROCR::prediction(predictions=y_hat, labels=X_te[,2])
+    
+    ## GINI
+    scores[k,"gini"] = SumModelGini(solution=y_hat, submission=X_te[,2])
+    
+    ## AUC
+    if(any(eval_metrics %in% "auc")){
+        perf = ROCR::performance(pred,"auc")
+        scores[k,"auc"] = perf@y.values[[1]]
+    }
+    
+    ## RMSE
+    if(any(eval_metrics %in% "rmse")){
+        perf = ROCR::performance(pred,"rmse")
+        scores[k,"rmse"] = perf@y.values[[1]]
+    }
+}# end corr plot
+
+
 # ## 1. Test set predictons
 # Y_hat_te = data.frame(matrix(as.numeric(NA),nrow(X_te),nboot))
 # colnames(Y_hat_te) = paste0("mdl_",1:nboot)

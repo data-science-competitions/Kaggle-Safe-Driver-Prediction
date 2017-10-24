@@ -3,8 +3,7 @@
 #' author: "Harel Lustiger"
 #' ---
 # 1. Add any project specific configuration here.
-Sys.setlocale("LC_TIME", "English") # uses english opertaing system naming 
-# convention
+Sys.setlocale("LC_TIME", "English") # uses english opertaing system naming convention
 
 # 2. Install missing packages for the project and load the required CRAN 
 #    packages.
@@ -25,10 +24,11 @@ packages.list = c("readr",                                                      
                   "ROCR")                                                       # Visualizing the performance of scoring classifiers
 packages.loader(packages.list)
 
-
 # 3. Define Constants
 GLOBALS = list(local_evaluation_seed=2015)
 
+# 4. Load helper functions
+source("src/helper_functions.R")
 
-# 4. Clean up
+# 5. Clean up
 rm(packages.list, packages.loader)
