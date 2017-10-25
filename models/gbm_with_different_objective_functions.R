@@ -9,9 +9,9 @@
 # A. Setup #
 ############
 source("src/helper_functions.R")
-nboot = 200 # number of bootstrap samples
+nboot = 10 # number of bootstrap samples
 f <- formula(paste(target_var_name,"~. -id"))
-eval_metrics=c("error","error@0.096","auc","map","rmse")
+eval_metrics=c("error","auc","map","rmse")
 objective="binary:logistic"
 tasks = expand.grid(eval_metric=eval_metrics, nboot=1:nboot, 
                     stringsAsFactors=FALSE)
@@ -99,8 +99,10 @@ stopCluster(cl)
 #########################
 # D. Results Processing #
 #########################
-cor_plot = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
-bar_plot = file.path(getwd(),"pred","(results)(diff_obj_func_diff_metric).csv")
+slug = file.path(getwd(),"notebooks","data")
+dir.create(slug,showWarnings=F,recursive=T)
+cor_plot = file.path(slug,"(results)(same_obj_func_diff_metric).csv")
+bar_plot = file.path(slug,"data","(results)(diff_obj_func_diff_metric).csv")
 scores1 = scores2 = data.frame(matrix(as.numeric(NA),nboot,length(eval_metrics)+1))
 colnames(scores1) = colnames(scores2) = c("gini",eval_metrics)
 # Scores for the correletion plots
@@ -147,14 +149,6 @@ for(i in 1:nrow(tasks)){
         perf = ROCR::performance(pred,"acc")
         cutoff_index = which.min(abs(perf@x.values[[1]]-0.5))
         scores1[k,"error"] = perf@y.values[[1]][cutoff_index]
-    }
-    
-    ## (skew-sensitive) ACCURECY
-    if(any(eval_metrics %in% eval_metrics[grep("error@.",eval_metrics)])){
-        eval_metric = eval_metrics[grep("error@.",eval_metrics)]
-        perf = ROCR::performance(pred,"acc")
-        cutoff_index = which.min(abs(perf@x.values[[1]]-cutoff))
-        scores1[k,eval_metric] = perf@y.values[[1]][cutoff_index]
     }
     
 }# end corr plot

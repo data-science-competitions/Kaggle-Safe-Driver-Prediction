@@ -7,14 +7,15 @@ output: html_notebook
 
 ```{r get_the_data, include=FALSE}
 lapply(c("ROCR","readr"), library, character.only = TRUE)
-setwd('..')
+# setwd('..')
+slug = file.path(getwd(),"data")
 
-file_path = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
-criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
+file_path = file.path(slug,"(results)(same_obj_func_diff_metric).csv")
+criteria = c("Gini","Accuracy","AUC","Precision","RMSE")
 scores1 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))
 
-file_path = file.path(getwd(),"pred","(results)(diff_obj_func_diff_metric).csv")
-criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
+file_path = file.path(slug,"(results)(diff_obj_func_diff_metric).csv")
+criteria = c("Gini","Accuracy","AUC","Precision","RMSE")
 scores2 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))[,-1]
 scores2 = tidyr::gather(scores2, key="metric", value="value",factor_key=TRUE)
 ```

@@ -9,8 +9,12 @@ h2 {
 #key_attributes_of_y h3 {font-size: 0.8em; margin-bottom:50px;}
 #experimental_setup_1 h2 {font-size: 0.8em; margin-bottom:50px;}
 #experimental_setup_2 h2 {font-size: 0.8em; margin-bottom:50px;}
+#experimental_setup_3 h2 {font-size: 0.8em; margin-bottom:50px;}
+#experimental_setup_3 code.r {font-size: 1.2em; margin-bottom:0px;}
+
 #experiment_1 h2 {font-size: 0.8em; margin-bottom:50px;}
 #experiment_2 h2 {font-size: 0.8em; margin-bottom:50px;}
+#experiment_3 h2 {font-size: 0.8em; margin-bottom:50px;}
 
 
 /*
