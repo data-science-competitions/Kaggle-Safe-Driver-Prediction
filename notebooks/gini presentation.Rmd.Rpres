@@ -163,3 +163,56 @@ going to produce a useful model for discriminating between classes.
 Furthermore, in their basic form, most classifiers do not behave well on 
 unbalanced data sets. Instead, most classifiers have predictive preference for 
 the class with the greater proportion of examples.
+
+
+Gini and Other Performance Measures in Practice
+========================================================
+id: gini_and_friends
+type: section
+
+
+Experimental Setup
+========================================================
+id: experimental_setup_1
+type: sub-section
+
+* **Data Spliting** - The train set is split into 4 unequal parts:
+    * *(10%) training set* - <green>used for fitting `xgboost` models</green>.
+    * *(10%) evaluation set* - given a <blue>performance measure</blue> (such as 
+        AUC), the model performance is evaluated based on this set. 
+        If there is no improvment for $10$ rounds, the training stops.
+    * *(10%) test set* - used as unseen data for asssing the differen models.
+    * *(70%) validation set* - <red>not in use at all</red>.
+
+Experimental Setup
+========================================================
+id: experimental_setup_2
+type: sub-section
+
+* **Data Perprocessing**
+    * Remove all rows containing missing values.
+    * Remove all cols which are not continous variables (inc. order factor).
+    * <green>&#x2192; train, eval and test sets all have 12 variables and around 
+    40,000 rows</green>
+* **Model Fitting**
+    * For each <blue>performance measure</blue>, there are 200 bootstrap models.
+    * Before each run, the train set is sampled with replacment (i.e. bootstrap 
+    sample).
+    * The other sets (eval and test) remain unchanged.
+    
+Experiments and Results
+========================================================
+id: experiments_and_Results
+type: section   
+
+
+1st Experiment
+========================================================
+id: experiment
+type: sub-section
+
+
+2nd Experiment
+========================================================
+id: experiment
+type: sub-section
