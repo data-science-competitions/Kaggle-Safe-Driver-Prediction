@@ -9,7 +9,7 @@
 # A. Setup #
 ############
 source("src/helper_functions.R")
-nboot = 10 # number of bootstrap samples
+nboot = 200 # number of bootstrap samples
 f <- formula(paste(target_var_name,"~. -id"))
 eval_metrics=c("error","auc","map","rmse")
 objective="binary:logistic"
@@ -102,7 +102,7 @@ stopCluster(cl)
 slug = file.path(getwd(),"notebooks","data")
 dir.create(slug,showWarnings=F,recursive=T)
 cor_plot = file.path(slug,"(results)(same_obj_func_diff_metric).csv")
-bar_plot = file.path(slug,"data","(results)(diff_obj_func_diff_metric).csv")
+bar_plot = file.path(slug,"(results)(diff_obj_func_diff_metric).csv")
 scores1 = scores2 = data.frame(matrix(as.numeric(NA),nboot,length(eval_metrics)+1))
 colnames(scores1) = colnames(scores2) = c("gini",eval_metrics)
 # Scores for the correletion plots
