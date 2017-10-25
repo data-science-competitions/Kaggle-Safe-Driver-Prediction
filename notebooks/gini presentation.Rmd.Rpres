@@ -184,6 +184,7 @@ type: sub-section
     * *(10%) test set* - used as unseen data for asssing the differen models.
     * *(70%) validation set* - <red>not in use at all</red>.
 
+
 Experimental Setup
 ========================================================
 id: experimental_setup_2
@@ -205,14 +206,67 @@ Experiments and Results
 id: experiments_and_Results
 type: section   
 
+```{r get_the_data, include=FALSE}
+lapply(c("ROCR","readr"), library, character.only = TRUE)
+setwd('..')
+
+file_path = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
+criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
+scores1 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))
+
+file_path = file.path(getwd(),"pred","(results)(diff_obj_func_diff_metric).csv")
+criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
+scores2 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))[,-1]
+scores2 = tidyr::gather(scores2, key="metric", value="value",factor_key=TRUE)
+```
+
 
 1st Experiment
 ========================================================
-id: experiment
+id: experiment_1
 type: sub-section
+
+**Correlation Plots** between `Gini` and selected 
+<blue>performance measure</blue>
+
+```{r correlation_plots, echo=FALSE, fig.align='center', fig.width=9, fig.height=4, dpi=300}
+par(pty="s", mfrow=c(1,4), mar=c(2, 0.5, 2.5, 0.2), oma=c(4, 4, 0.2, 0.2))
+for(criterion in c("Accuracy","AUC","Precision","RMSE")){
+    # 1. Build the plot structure
+    plot(scores1[,criterion], scores1[,"Gini"], type="n",
+         ylab="Gini", xlab=criterion,
+         cex.lab=1.2, cex.axis=1.2, cex.main=1.2,
+         main=paste0("Gini as a function of ",criterion))
+    # 2. Plot the data points
+    points(scores1[,criterion], scores1[,"Gini"], pch=16, col="deepskyblue")
+    # 3. The regression line
+    abline(lm(scores1[,"Gini"]~scores1[,criterion]), col="red", lwd=2) # regression line (y~x)
+    text(mean(range(scores1[,criterion])),
+         mean(range(scores1[,"Gini"])),
+         paste("r =",with(scores1,round(cor(scores1[,criterion],Gini),2))),
+         col="red", cex=2, font=2) 
+}
+dev.off()
+```
+
+$$
+\text{AUC}=(\text{Gini}+1)/2 
+\quad\leftrightarrow\quad
+\text{Gini}=2\times \text{AUC}-1
+$$
 
 
 2nd Experiment
 ========================================================
-id: experiment
+id: experiment_2
 type: sub-section
+
+**Boxplots** of selected <blue>performance measure</blue> which were used to  
+stop the model training
+
+```{r boxplots, echo=FALSE, fig.align='center', fig.width=12, fig.height=7}
+boxplot(value~metric, data=scores2,
+        ylab="Gini",
+        cex.lab=1.5, cex.axis=1.5, cex.names=1.5)
+```
+

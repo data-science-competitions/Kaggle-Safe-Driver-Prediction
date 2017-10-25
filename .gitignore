@@ -39,3 +39,4 @@ vignettes/*.pdf
 notebooks/presentation.Rmd-figure/
 *.md
 xgboost.model
+notebooks/gini presentation.Rmd-figure/
