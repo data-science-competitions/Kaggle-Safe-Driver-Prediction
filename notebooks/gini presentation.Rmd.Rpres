@@ -7,12 +7,9 @@ transition: none
 css: custom.css
 
 
-Introduction
-========================================================
-type: section
-
 ```{r get_the_data, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE, results=FALSE}
 lapply(c("ROCR","readr"), library, character.only = TRUE)
+setwd("C:/Dropbox/Research/Kaggle-Safe-Driver-Prediction/notebooks")
 slug = file.path(getwd(),"data")
 
 file_path = file.path(slug,"(results)(same_obj_func_diff_metric).csv")
@@ -26,11 +23,15 @@ scores2 = tidyr::gather(scores2, key="metric", value="value",factor_key=TRUE)
 ```
 
 
+Introduction
+========================================================
+type: section
+
+
 Real World Example
 ========================================================
 id: real_world_example
 type: sub-section
-
 
 >> New Zealand's Jacinda Ardern sets out priorities: climate, `inequality` and 
 women.
@@ -43,10 +44,24 @@ successfully by the end of the PM term?
 
 Graphical representation of Gini, Gaerem Hart and Me
 ========================================================
+id: gini_graphical_representation_before
 type: sub-section
-title: false
+title: true
 
-![alt text](images/gini_graphical_representation.png)
+<div align="center">
+<img src="images/gini_before.png" width=700 height=600>
+</div>
+
+
+Graphical representation of Gini, Gaerem Hart and Me
+========================================================
+id: gini_graphical_representation_after
+type: sub-section
+title: true
+
+<div align="center">
+<img src="images/gini_after.png" width=700 height=600>
+</div>
 
 <!-- 
 NOTES:
@@ -287,7 +302,7 @@ id: experiment_2
 type: sub-section
 
 **Boxplots** of selected <blue>performance measure</blue> which were used to  
-stop the `xgboost` model training
+stop `xgboost` training
 
 ```{r boxplots, echo=FALSE, fig.align='center', fig.width=12, fig.height=6}
 par(pty="m", mfrow=c(1,1), mar=c(0, 5, 2, 0), oma=c(4, 4, 0.2, 0.2))
