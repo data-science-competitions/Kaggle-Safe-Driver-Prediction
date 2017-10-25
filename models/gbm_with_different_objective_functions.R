@@ -98,9 +98,9 @@ stopCluster(cl)
 #########################
 cor_plot = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
 bar_plot = file.path(getwd(),"pred","(results)(diff_obj_func_diff_metric).csv")
-scores = data.frame(matrix(as.numeric(NA),nboot,length(eval_metrics)+1))
-colnames(scores) = c("gini",eval_metrics)
-
+scores1 = scores2 = data.frame(matrix(as.numeric(NA),nboot,length(eval_metrics)+1))
+colnames(scores1) = colnames(scores2) = c("gini",eval_metrics)
+# Scores for the correletion plots
 for(i in 1:nrow(tasks)){
     # Extract Data
     k = pred_list[[i]]$k
@@ -111,39 +111,39 @@ for(i in 1:nrow(tasks)){
     if(eval_metric != "auc") next
     
     # Calculate performance measures
+    y = as.numeric(as.character(X_te[,2]))
     y_hat = pred_list[[i]]$y_hat
     pred = ROCR::prediction(predictions=y_hat, 
                             labels=as.numeric(as.character(X_te[,2])))
     
     ## GINI
-    y = as.numeric(as.character(X_te[,2]))
-    scores[k,"gini"] = SumModelGini(solution=y, submission=y_hat) / 
+    scores1[k,"gini"] = SumModelGini(solution=y, submission=y_hat) / 
         SumModelGini(solution=y, submission=y)
     
     ## AUC
     if(any(eval_metrics %in% "auc")){
         perf = ROCR::performance(pred,"auc")
-        scores[k,"auc"] = perf@y.values[[1]]
+        scores1[k,"auc"] = perf@y.values[[1]]
     }
     
     ## RMSE
     if(any(eval_metrics %in% "rmse")){
         perf = ROCR::performance(pred,"rmse")
-        scores[k,"rmse"] = perf@y.values[[1]]
+        scores1[k,"rmse"] = perf@y.values[[1]]
     }
     
     ## PRECISION
     if(any(eval_metrics %in% "map")){
         perf = ROCR::performance(pred,"prec")
         cutoff_index = which.min(abs(perf@x.values[[1]]-cutoff))
-        scores[k,"map"] = perf@y.values[[1]][cutoff_index]
+        scores1[k,"map"] = perf@y.values[[1]][cutoff_index]
     }
     
     ## ACCURECY
     if(any(eval_metrics %in% "error")){
         perf = ROCR::performance(pred,"acc")
         cutoff_index = which.min(abs(perf@x.values[[1]]-0.5))
-        scores[k,"error"] = perf@y.values[[1]][cutoff_index]
+        scores1[k,"error"] = perf@y.values[[1]][cutoff_index]
     }
     
     ## (skew-sensitive) ACCURECY
@@ -151,17 +151,42 @@ for(i in 1:nrow(tasks)){
         eval_metric = eval_metrics[grep("error@.",eval_metrics)]
         perf = ROCR::performance(pred,"acc")
         cutoff_index = which.min(abs(perf@x.values[[1]]-cutoff))
-        scores[k,eval_metric] = perf@y.values[[1]][cutoff_index]
+        scores1[k,eval_metric] = perf@y.values[[1]][cutoff_index]
     }
     
 }# end corr plot
-scores = round(scores,5)
+scores1 = round(scores1,5)
+
+# Scores for the boxplot
+for(i in 1:nrow(tasks)){
+    # Extract Data
+    k = pred_list[[i]]$k
+    eval_metric = tasks[i,"eval_metric"]
+    cutoff = pred_list[[i]]$F1_cutoff
+    
+    # Calculate performance measures
+    y = as.numeric(as.character(X_te[,2]))
+    y_hat = pred_list[[i]]$y_hat
+    pred = ROCR::prediction(predictions=y_hat,
+                            labels=as.numeric(as.character(X_te[,2])))
+    
+    # Calculate performance measures
+    ## Gini Benchmark
+    set.seed(1201)
+    scores2[k,"gini"] = SumModelGini(solution=y, submission=y_hat*0) / 
+        SumModelGini(solution=y, submission=y)   
+    ## The corresponding Gini coeff for the eval metric
+    scores2[k,eval_metric] = SumModelGini(solution=y, submission=y_hat) / 
+        SumModelGini(solution=y, submission=y)
+    
+} # end boxplot
 
 
 ######################
 # Export the results #
 ######################
-write_csv(scores,cor_plot)
+write_csv(scores1,cor_plot)
+write_csv(scores2,bar_plot)
 
 
 print(difftime(end_time,start_time))

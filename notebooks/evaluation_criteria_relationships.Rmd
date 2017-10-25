@@ -8,9 +8,15 @@ output: html_notebook
 ```{r get_the_data, include=FALSE}
 lapply(c("ROCR","readr"), library, character.only = TRUE)
 setwd('..')
+
 file_path = file.path(getwd(),"pred","(results)(same_obj_func_diff_metric).csv")
 criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
-scores = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))
+scores1 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))
+
+file_path = file.path(getwd(),"pred","(results)(diff_obj_func_diff_metric).csv")
+criteria = c("Gini","Accuracy","Adjusted Accuracy","AUC","Precision","RMSE")
+scores2 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))[,-1]
+scores2 = tidyr::gather(scores2, key="metric", value="value",factor_key=TRUE)
 ```
 
 # Correlation Plots
@@ -19,17 +25,25 @@ scores = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))
 par(pty="s", mfrow=c(2,2), mar=c(2, 0.5, 2.5, 0.2), oma=c(4, 4, 0.2, 0.2))
 for(criterion in c("Accuracy","AUC","Precision","RMSE")){
     # 1. Build the plot structure
-    plot(scores[,criterion], scores[,"Gini"], type="n",
+    plot(scores1[,criterion], scores1[,"Gini"], type="n",
          ylab="Gini", xlab=criterion,
          cex.lab=1.2, cex.axis=1.2, cex.main=1.2,
          main=paste0("Gini as a function of ",criterion))
     # 2. Plot the data points
-    points(scores[,criterion], scores[,"Gini"], pch=16, col="deepskyblue")
+    points(scores1[,criterion], scores1[,"Gini"], pch=16, col="deepskyblue")
     # 3. The regression line
-    abline(lm(scores[,"Gini"]~scores[,criterion]), col="red", lwd=2) # regression line (y~x)
-    text(mean(range(scores[,criterion])),
-         mean(range(scores[,"Gini"])),
-         paste("r =",with(scores,round(cor(scores[,criterion],Gini),2))),
+    abline(lm(scores1[,"Gini"]~scores1[,criterion]), col="red", lwd=2) # regression line (y~x)
+    text(mean(range(scores1[,criterion])),
+         mean(range(scores1[,"Gini"])),
+         paste("r =",with(scores1,round(cor(scores1[,criterion],Gini),2))),
          col="red", cex=2, font=2) 
 }
 ```
+
+# Boxplots
+
+```{r boxplots, echo=FALSE, fig.width=8, fig.height=8}
+
+boxplot(value~metric, data=scores2)
+```
+
