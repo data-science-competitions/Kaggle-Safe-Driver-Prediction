@@ -102,9 +102,9 @@ GiniCoeff <- function(solution, submission){
 }
 ```
 
-To learn more about "Estimation of the Gini coefficient" see 
+<small>To learn more about "Estimation of the Gini coefficient" see 
 [this link](http://www.vcharite.univ-mrs.fr/PP/lubrano/cours/Lecture-4.pdf)
-(p. 14)
+(p. 14)</small>
 
 
 Normalized Gini Coefficient Attributes
@@ -121,9 +121,13 @@ NormGiniCoeff <- function(solution, submission){
 }
 ```
 
+<!-- 
 $$
-0\leq \text{gini} \leq 1
+| \text{gini} | \leq 1
 $$
+
+where $-1 \leq \text{gini} \leq 0$ means that the submission is the opposite
+-->
 
 
 Context
@@ -141,7 +145,7 @@ Predict if a driver will file an insurance claim next year.
 Maximize the (Normalized) Gini Coefficient. 
 
 **Prediction Type**  
-Classificaton with emphasize on *scoring classifiers*.
+Classification with emphasize on *scoring classifiers*.
 
 <!-- 
 NOTES:
@@ -157,6 +161,7 @@ Scoring Classifiers
 ========================================================
 type: section
 
+
 What is Scoring?
 ========================================================
 id: what_is_scoring
@@ -167,7 +172,7 @@ n = 6 # for simplicity, choose an even number
 ```
 
 Given `r n` members from the insurance company database and their *true future 
-claim result*, we obserbe two algorithms outputs:  
+claim result*, we observe two algorithms outputs:  
 
 ```{r scoring_example_1, echo=FALSE, results='asis'}
 set.seed(1547)
@@ -193,7 +198,7 @@ coeff value
 Are the two algorithms' **ranks** the same? **NO**, but who cares?!
 
 <!--
-Note that utilizing ranking algorithms can be a substitude for scoring 
+Note that utilizing ranking algorithms can be a substituted for scoring 
 algorithms, but the opposite does not necessarily hold.
 -->
 
@@ -254,12 +259,12 @@ Experimental Setup
 id: experimental_setup_1
 type: sub-section
 
-* **Data Spliting** - The train set is split into 4 unequal parts:
+* **Data Splitting** - The train set is split into 4 unequal parts:
 * *(10%) training set* - <green>used for fitting `xgboost` models</green>.
 * *(10%) evaluation set* - given a <blue>performance measure</blue> (such as 
 AUC), the model performance is evaluated based on this set. 
-If there is no improvment for $10$ rounds, the training stops.
-* *(10%) test set* - used as unseen data for asssing the differen models.
+If there is no improvement for $10$ rounds, the training stops.
+* *(10%) test set* - used as unseen data for assessing the different models.
 * *(70%) validation set* - <red>not in use at all</red>.
 
 
@@ -268,15 +273,15 @@ Experimental Setup
 id: experimental_setup_2
 type: sub-section
 
-* **Data Perprocessing**
+* **Data Preprocessing**
 * Remove all rows containing missing values.
-* Remove all cols which are not continous variables (inc. order factor).
+* Remove all cols which are not continuous variables (inc. order factor).
 * <green>&#x2192; train, eval and test sets all have 12 variables and around 
 40,000 rows</green>
 * **Model Fitting**
 * For each <blue>performance measure</blue>, there are 200 bootstrap 
 `xgboost` models.
-* Before each run, the train set is sampled with replacment (i.e. bootstrap 
+* Before each run, the train set is sampled with replacement (i.e. bootstrap 
 sample).
 * The other sets (eval and test) remain unchanged.
 

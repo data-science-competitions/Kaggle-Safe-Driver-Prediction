@@ -7,7 +7,7 @@ h2 {
 #gini_graphical_representation_before h2 {font-size: 0.8em;}
 #gini_graphical_representation_after h2 {font-size: 0.8em;}
 #gini_scalar h2 {font-size: 0.8em; margin-bottom:50px;}
-#gini_scalar code.r {font-size: 1.2em; margin-bottom:0px;}
+#gini_scalar code.r {font-size: 1.2em; margin-bottom:0px; font-size: 100%}
 #norm_gini_scalar h2 {font-size: 0.8em; margin-bottom:50px;}
 #norm_gini_scalar code.r {font-size: 1.2em; margin-bottom:0px;}
 #what_is_scoring h2 {font-size: 0.8em;}
