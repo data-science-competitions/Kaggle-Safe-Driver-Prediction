@@ -128,6 +128,7 @@ $$
 
 Context
 ========================================================
+id: context
 type: sub-section
 
 **Featured Prediction Competition:**   
@@ -168,7 +169,7 @@ n = 6 # for simplicity, choose an even number
 Given `r n` members from the insurance company database and their *true future 
 claim result*, we obserbe two algorithms outputs:  
 
-```{r scoring_example, echo=FALSE, results='asis'}
+```{r scoring_example_1, echo=FALSE, results='asis'}
 set.seed(1547)
 
 y = rep(c(0,1),each=n/2)
@@ -184,9 +185,6 @@ example = data.frame("Member Name"=member_name,
                      "2nd Algorithm Score"=algorithm_score_2,
                      check.names=F)
 knitr::kable(example, format="markdown", align="c")
-
-# SumModelGini(y,algorithm_score_1)/SumModelGini(y,y)
-# SumModelGini(y,algorithm_score_2)/SumModelGini(y,y)
 ```
 
 Are the two algorithms' **scores** the same? **YES**, both would yield the same Gini 
