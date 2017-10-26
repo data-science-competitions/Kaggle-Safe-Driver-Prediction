@@ -9,6 +9,7 @@ css: custom.css
 
 ```{r get_the_data, message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE, results=FALSE}
 lapply(c("ROCR","readr"), library, character.only = TRUE)
+pusha = getwd()
 setwd("C:/Dropbox/Research/Kaggle-Safe-Driver-Prediction/notebooks")
 slug = file.path(getwd(),"data")
 
@@ -20,6 +21,8 @@ file_path = file.path(slug,"(results)(diff_obj_func_diff_metric).csv")
 criteria = c("Gini","Accuracy","AUC","Precision","RMSE")
 scores2 = as.data.frame(read_csv(file_path, col_names=criteria, skip=1))[,-1]
 scores2 = tidyr::gather(scores2, key="metric", value="value",factor_key=TRUE)
+
+setwd(pusha)
 ```
 
 
@@ -42,7 +45,7 @@ successfully by the end of the PM term?
 <green>&#x2192; Suggestion: The Gini Coefficient</green>
 
 
-Graphical representation of Gini, Gaerem Hart and Me
+Graphical representation of Gini:Lorenz curve, Gaerem Hart and Me
 ========================================================
 id: gini_graphical_representation_before
 type: sub-section
@@ -69,17 +72,59 @@ NOTES:
 * The y-axis is measures a continuous variable
 -->
 
-Objective and Key Points
-========================================================
-type: section
 
-Main Points
+Projecting the 2D space into a scalar metric (a.k.a. Gini Coefficient)
 ========================================================
+id: gini_scalar
 type: sub-section
+title: true
 
-1. What are the relationships between Gini and and other criteria?
-2. How does Gini behaive under unbalanced target variable?
-3. How can we elicit more infromation from Gini?
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+GiniCoeff <- function(solution, submission){
+    
+    df = data.frame(solution = solution, submission = submission)
+    df = df[order(df$submission, decreasing = TRUE),]
+    df$uniform = (1:nrow(df))/nrow(df) # = (1/n, 2/n, ..., 1)
+    totalPos = sum(df$solution) # how many time '1' appears in reality?
+    
+    # This will store the cumulative number of positive 
+    # examples found (used for computing "Model Lorentz")
+    df$cumPosFound = cumsum(df$solution) 
+    
+    # This will store the cumulative proportion of positive examples
+    # found ("Model Lorentz")
+    df$Lorentz = df$cumPosFound / totalPos 
+    
+    # This will store Lorentz minus uniform
+    df$Gini = df$Lorentz - df$uniform   
+    
+    return(sum(df$Gini))
+}
+```
+
+To learn more about "Estimation of the Gini coefficient" see 
+[this link](http://www.vcharite.univ-mrs.fr/PP/lubrano/cours/Lecture-4.pdf)
+(p. 14)
+
+
+Normalized Gini Coefficient Attributes
+========================================================
+id: norm_gini_scalar
+type: sub-section
+title: true
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+NormGiniCoeff <- function(solution, submission){
+    
+    GiniCoeff(solution, submission) / GiniCoeff(solution, solution)
+    
+}
+```
+
+$$
+0\leq \text{gini} \leq 1
+$$
+
 
 Context
 ========================================================
@@ -125,8 +170,11 @@ claim result*, we obserbe two algorithms outputs:
 
 ```{r scoring_example, echo=FALSE, results='asis'}
 set.seed(1547)
+
+y = rep(c(0,1),each=n/2)
+member_result = factor(y, labels=c("No","Yes"))
 member_name = toupper(letters[1:n])
-member_result = gl(2,round(n/2), labels=c("No","Yes"))
+
 algorithm_score_1 = 1:n
 algorithm_score_2 = c(sample(1:(n/2), n/2),
                       sample((1+n/2):n, n/2))
@@ -136,6 +184,9 @@ example = data.frame("Member Name"=member_name,
                      "2nd Algorithm Score"=algorithm_score_2,
                      check.names=F)
 knitr::kable(example, format="markdown", align="c")
+
+# SumModelGini(y,algorithm_score_1)/SumModelGini(y,y)
+# SumModelGini(y,algorithm_score_2)/SumModelGini(y,y)
 ```
 
 Are the two algorithms' **scores** the same? **YES**, both would yield the same Gini 
