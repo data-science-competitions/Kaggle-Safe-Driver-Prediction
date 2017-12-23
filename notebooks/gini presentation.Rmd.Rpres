@@ -45,7 +45,7 @@ successfully by the end of the PM term?
 <green>&#x2192; Suggestion: The Gini Coefficient</green>
 
 
-Graphical representation of Gini:Lorenz curve, Gaerem Hart and Me
+Graphical representation of Gini: Lorenz curve, Gaerem Hart and Me
 ========================================================
 id: gini_graphical_representation_before
 type: sub-section
@@ -56,7 +56,7 @@ title: true
 </div>
 
 
-Graphical representation of Gini, Gaerem Hart and Me
+Graphical representation of Gini: Lorenz curve, Gaerem Hart and Me
 ========================================================
 id: gini_graphical_representation_after
 type: sub-section
@@ -120,14 +120,6 @@ NormGiniCoeff <- function(solution, submission){
     
 }
 ```
-
-<!-- 
-$$
-| \text{gini} | \leq 1
-$$
-
-where $-1 \leq \text{gini} \leq 0$ means that the submission is the opposite
--->
 
 
 Context
