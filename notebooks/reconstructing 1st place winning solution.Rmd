@@ -1,0 +1,83 @@
+---
+title: "1st Place Solution"
+subtitle: "Reconstructing Winning Kaggle Solutions"
+subject: "Porto Seguro’s Safe Driver Prediction"
+author: "Harel Lustiger"
+date: "Dec 2017"
+output: html_notebook
+---
+
+# Load Packages
+
+```{r load_libraries, echo=TRUE, message=FALSE, warning=FALSE}
+library("tidyverse")
+```
+
+
+# Import Data
+
+In this dataset, each variable name contains designations about its type and 
+group. Thus, the strategy is:
+
+1. Get the data with `R` best guess
+2. Extract the variable metadata held in the columns' names 
+(as prefix/postfix/suffix) and use it for semi-automatic type-conversion. 
+
+## Get the Data
+
+```{r import_data, echo=TRUE, message=FALSE, warning=FALSE}
+PATHS = list()
+PATHS[["train"]] = file.path(dirname(getwd()),"data","train.zip")
+PATHS[["test"]]= file.path(dirname(getwd()),"data","test.zip")
+  
+DATASETS = list()
+DATASETS[["train"]] = read_csv(PATHS[["train"]], na=c("","NA",-1), n_max=1e2)
+DATASETS[["test"]] = read_csv(PATHS[["test"]], na=c("","NA",-1), n_max=1e2)
+  
+tidy_train = DATASETS[["train"]]
+tidy_test = DATASETS[["test"]]
+```
+
+## Parse the Data
+
+```{r extracting_variables_groups_and_types, message=FALSE, warning=FALSE}
+# 1. Extract variables types from their names
+col_metadata = data.frame(name=colnames(tidy_train), stringsAsFactors=FALSE)
+col_metadata %<>%
+    # 1.1 Create new columns to hold the variables' metadata
+    separate("name", into=c("prefix","group","number","type"), remove=F) %>%
+    # 1.2 The metadata has irrelevant information which we discard
+    select(-prefix, -number) %>%
+    # By default the dataset creator omitted numeric variables designation. 
+    # As a result, numeric variables are assigned with NAs.
+    # 1.3 Replace NAs under the type col with "num".
+    replace_na(list(type="num"))
+  
+# 2. Map the original type names with r known types
+col_metadata[["type"]] = 
+    sapply(col_metadata[["type"]], recode, 
+           num="as.numeric", cat="as.factor", bin="as.logical")
+  
+# 3. Define the target variable to be binary
+col_metadata[2,"type"] = "as.logical"
+  
+# 4. Set the train set variables types
+for(j in 1:length(col_metadata)){
+    col_name = col_metadata[j,"name"]
+    col_type = col_metadata[j,"type"]
+    # If the col's name doesn't exist in the provided data set, skip it.
+    if(! col_name %in% colnames(tidy_train)) next
+    # Set the col data type
+    tidy_train %>% mutate_at(j, col_type)
+}
+  
+# 5. Set the test set variables types
+for(j in 1:length(col_metadata)){
+    col_name = col_metadata[j,"name"]
+    col_type = col_metadata[j,"type"]
+    # If the col's name doesn't exist in the provided data set, skip it.
+    if(! col_name %in% colnames(tidy_test)) next
+    # Set the col data type
+    tidy_test %>% mutate_at(j, col_type)
+}
+```
