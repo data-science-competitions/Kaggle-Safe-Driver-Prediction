@@ -92,7 +92,8 @@ for(cat_var in cat_vars){
     dummy_variables = model.matrix(formula(paste('~',cat_var,'-1')), tidy_data)
     options(na.action='na.omit')
     # 2.3 Avoid the dummy variables trap
-    dummy_variables = as_data_frame(dummy_variables)[,-1]
+    dummy_variables = as_data_frame(dummy_variables, col_type=col_type)[,-1]
+    dummy_variables = dummy_variables %>% apply(2,as.logical)
     # 2.4 Append the dummy variables to the data set
     tidy_data = cbind(tidy_data, dummy_variables)
     # 2.5 Drop the original variable
