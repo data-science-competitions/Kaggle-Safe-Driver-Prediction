@@ -36,14 +36,18 @@ DATASETS[["test"]] = read_csv(PATHS[["test"]], na=c("","NA",-1), n_max=1e2)
   
 tidy_train = DATASETS[["train"]]
 tidy_test = DATASETS[["test"]]
+
+tidy_data = bind_rows(list(train=tidy_train, test=tidy_test), .id="set")
 ```
 
 ## Parse the Data
 
 ```{r extracting_variables_groups_and_types, message=FALSE, warning=FALSE}
 # 1. Extract variables types from their names
-col_metadata = data.frame(name=colnames(tidy_train), stringsAsFactors=FALSE)
+col_metadata = data.frame(name=colnames(tidy_data), stringsAsFactors=FALSE)
 col_metadata %<>%
+    # 1.1 Drop the 'set' row
+    filter(name!="set") %>%
     # 1.1 Create new columns to hold the variables' metadata
     separate("name", into=c("prefix","group","number","type"), remove=F) %>%
     # 1.2 The metadata has irrelevant information which we discard
@@ -61,23 +65,27 @@ col_metadata[["type"]] =
 # 3. Define the target variable to be binary
 col_metadata[2,"type"] = "as.logical"
   
-# 4. Set the train set variables types
-for(j in 1:length(col_metadata)){
+# 4. Set the data set variables types
+for(j in 1:nrow(col_metadata)){
     col_name = col_metadata[j,"name"]
     col_type = col_metadata[j,"type"]
-    # If the col's name doesn't exist in the provided data set, skip it.
-    if(! col_name %in% colnames(tidy_train)) next
+    # Match between the metadata and data set col numbers
+    m = which(colnames(tidy_data) %in% col_name)
+    # If the metadata doesn't fit any of the provided data set cols then skip it
+    if(!m) next
     # Set the col data type
-    tidy_train %>% mutate_at(j, col_type)
-}
-  
-# 5. Set the test set variables types
-for(j in 1:length(col_metadata)){
-    col_name = col_metadata[j,"name"]
-    col_type = col_metadata[j,"type"]
-    # If the col's name doesn't exist in the provided data set, skip it.
-    if(! col_name %in% colnames(tidy_test)) next
-    # Set the col data type
-    tidy_test %>% mutate_at(j, col_type)
+    tidy_data = tidy_data %>% mutate_at(m, col_type)
 }
 ```
+
+
+# Feature Engineering
+
+```{r feature_engineering}
+# 1. Drop the *calc variables group
+tidy_data = tidy_data %>% select(-matches('.+_calc_.+$'))
+
+```
+
+
+
