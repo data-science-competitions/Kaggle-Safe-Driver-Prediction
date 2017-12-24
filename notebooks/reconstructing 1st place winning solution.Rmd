@@ -15,6 +15,7 @@ rm(list = ls()); cat("\014")
 
 ```{r load_libraries, echo=TRUE, message=FALSE, warning=FALSE}
 library("tidyverse")
+library("caret")
 ```
 
 
@@ -81,7 +82,7 @@ for(j in 1:nrow(col_metadata)){
 ```
 
 
-# Feature Engineering
+# Features Engineering
 
 ```{r feature_engineering}
 # 1. Drop the *calc variables group
@@ -89,13 +90,12 @@ tidy_data = tidy_data %>% select(-matches('.+_calc_.+$'))
   
 # 2. Encode categorical variables (*cat) via one-hot encoding
 cat_vars = colnames(tidy_data %>% select(matches('.+_cat+$')))
+options(na.action='na.pass')
 for(cat_var in cat_vars){
     # 2.1 If the current variable contains less than three levels, then skip it
     if(nlevels(tidy_data[[cat_var]])<3) next
     # 2.2 Expand the factor varialbe to a set of dummy variables
-    options(na.action='na.pass')
     dummy_variables = model.matrix(formula(paste('~',cat_var,'-1')), tidy_data)
-    options(na.action='na.omit')
     # 2.3 Avoid the dummy variables trap
     dummy_variables = apply(dummy_variables,2,as.logical)[,-1] 
     # 2.4 Append the dummy variables to the data set
@@ -103,6 +103,30 @@ for(cat_var in cat_vars){
     # 2.5 Drop the original variable
     tidy_data = tidy_data %>% select(-ends_with(cat_var))
 }
+options(na.action='na.omit')
 ```
 
 
+# Features Transformations
+
+```{r feature_transformations}
+num_vars = names(which(sapply(tidy_data, is.numeric)))[-1] # exclude the ID col
+options(na.action='na.pass')
+for(num_var in num_vars){
+    # 1. Extract the current variable
+    current_var = as_data_frame(tidy_data[[num_var]])
+    # 2. Stabilize variance of numeric features
+    # 2.1 Fit YeoJohnson power transformation
+    preprocessing.power_transform = preProcess(current_var, method="YeoJohnson") 
+    # 2.2 Apply YeoJohnson transformation
+    current_var = predict(preprocessing.power_transform, current_var)
+    # 3. Standardization
+    # 3.1 Center and scale the feature distribution
+    preprocessing.scale = preProcess(current_var, method=c("center","scale")) 
+    # 3.2 Apply standardization
+    current_var = predict(preprocessing.scale, current_var)
+    # 4. Update the data set
+    tidy_data[[num_var]] = unlist(current_var)
+}
+options(na.action='na.omit')
+```
