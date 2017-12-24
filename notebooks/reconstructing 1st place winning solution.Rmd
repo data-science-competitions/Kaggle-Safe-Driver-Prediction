@@ -34,10 +34,8 @@ DATASETS = list()
 DATASETS[["train"]] = read_csv(PATHS[["train"]], na=c("","NA",-1), n_max=1e2)
 DATASETS[["test"]] = read_csv(PATHS[["test"]], na=c("","NA",-1), n_max=1e2)
   
-tidy_train = DATASETS[["train"]]
-tidy_test = DATASETS[["test"]]
-
-tidy_data = bind_rows(list(train=tidy_train, test=tidy_test), .id="set")
+tidy_data = bind_rows(list(train=DATASETS[["train"]], test=DATASETS[["test"]]),
+                      .id="set")
 ```
 
 ## Parse the Data
@@ -84,8 +82,22 @@ for(j in 1:nrow(col_metadata)){
 ```{r feature_engineering}
 # 1. Drop the *calc variables group
 tidy_data = tidy_data %>% select(-matches('.+_calc_.+$'))
-
+# 2. Encode categorical variables (*cat) via one-hot encoding
+cat_vars = colnames(tidy_data %>% select(matches('.+_cat+$')))
+for(cat_var in cat_vars){
+    # 2.1 If the current variable contains less than two levels, then skip it
+    if(nlevels(tidy_data[[cat_var]])<2) next
+    # 2.2 Expan the factor varialbe to a set of dummy variables
+    options(na.action='na.pass')
+    dummy_variables = model.matrix(formula(paste('~',cat_var,'-1')), tidy_data)
+    options(na.action='na.omit')
+    # 2.3 Avoid the dummy variables trap
+    dummy_variables = as_data_frame(dummy_variables)[,-1]
+    # 2.4 Append the dummy variables to the data set
+    tidy_data = cbind(tidy_data, dummy_variables)
+    # 2.5 Drop the original variable
+    tidy_data = tidy_data %>% select(-ends_with(cat_var))
+}
 ```
-
 
 
