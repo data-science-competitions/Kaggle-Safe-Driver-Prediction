@@ -1,6 +1,6 @@
 ---
-title: "1st Place Solution"
-subtitle: "Reconstructing Winning Kaggle Solutions"
+title: "Reconstructing Kaggle 1st Place Winning Solution"
+subtitle: "80% `tidyverse` compatible"
 subject: "Porto Seguro’s Safe Driver Prediction"
 author: "Harel Lustiger"
 date: "Dec 2017"
@@ -87,18 +87,18 @@ for(j in 1:nrow(col_metadata)){
 
 ```{r feature_engineering, message=FALSE, warning=FALSE}
 options(na.action='na.pass')
-  
+
 # 1. Drop the *calc variables group
 tidy_data = tidy_data %>% select(-matches('.+_calc_.+$'))
-  
+
 # 2. Data Transformations
 # 2.1 An Initial Recipe: declare the variables and their roles 
 rec_obj <- recipe(target ~ ., data=tidy_data)
-rec_obj = rec_obj %>%
+rec_obj <- rec_obj %>%
     add_role(id, new_role="id variable") %>%
     add_role(set, new_role="splitting variable")
 # 2.2 Preprocessing Steps
-rec_obj = rec_obj %>% 
+rec_obj <- rec_obj %>% 
     # 2.2.1 Individual transformations for skewness and other issues
     # 2.2.1.1 Yeo-Johnson Transformation
     step_YeoJohnson(all_numeric(), -id, na.rm=TRUE) %>% 
@@ -108,7 +108,7 @@ rec_obj = rec_obj %>%
     # 2.2.2 Creating Dummy Variables
     step_dummy(all_nominal(), -set)
 # 2.3 Estimate the recipe statistics
-rec_obj = rec_obj %>% prep(training=tidy_data)
+rec_obj <- rec_obj %>% prep(training=tidy_data)
 # 2.4 Apply the recipe to the data set
 tidy_data = bake(rec_obj, newdata=tidy_data)
   
@@ -117,7 +117,12 @@ options(na.action='na.omit')
 ``` 
 
 
+# Building an AutoEncoder
 
+https://docs.google.com/document/d/1tosvfWMkfW1-UkEQ1LL66PlFTmVZfXkbP0Dl1x5KcvA/edit#
+https://www.kaggle.com/c/porto-seguro-safe-driver-prediction/discussion/44629
+https://keras.rstudio.com/articles/examples/variational_autoencoder.html
+https://www.udemy.com/deeplearning/learn/v4/content
 
 
 
