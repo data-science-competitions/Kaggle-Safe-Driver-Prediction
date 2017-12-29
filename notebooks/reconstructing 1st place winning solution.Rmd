@@ -16,6 +16,9 @@ rm(list = ls()); cat("\014")
 ```{r load_libraries, echo=TRUE, message=FALSE, warning=FALSE}
 library("tidyverse")
 library("recipes")
+library("rsample")
+library("yardstick")
+library("purrr")
 library("caret")
 ```
 
@@ -31,17 +34,25 @@ group. Thus, the strategy is:
 
 ## Get the Data
 
+The [data description in Kaggles]()https://www.kaggle.com/c/porto-seguro-safe-driver-prediction/data)
+states that $-1$ represent missing values.
+However, the author of this solution declers he didn't change these values.
+Therefore, to be consistent with this solution we don't explicitly treat $-1$ as 
+NA when the data is loaded.
+
 ```{r import_data, echo=TRUE, message=FALSE, warning=FALSE}
 PATHS = list()
 PATHS[["train"]] = file.path(dirname(getwd()),"data","train.zip")
 PATHS[["test"]]= file.path(dirname(getwd()),"data","test.zip")
   
 DATASETS = list()
-DATASETS[["train"]] = read_csv(PATHS[["train"]], na=c("","NA",-1), n_max=1e2)
-DATASETS[["test"]] = read_csv(PATHS[["test"]], na=c("","NA",-1), n_max=1e2)
+DATASETS[["train"]] = read_csv(PATHS[["train"]], na=c("","NA"), n_max=1e3)
+DATASETS[["test"]] = read_csv(PATHS[["test"]], na=c("","NA"), n_max=1e3)
   
 tidy_data = bind_rows(list(train=DATASETS[["train"]], test=DATASETS[["test"]]),
                       .id="set")
+
+y_name = "target"
 ```
 
 ## Parse the Data
@@ -93,12 +104,12 @@ tidy_data = tidy_data %>% select(-matches('.+_calc_.+$'))
 
 # 2. Data Transformations
 # 2.1 An Initial Recipe: declare the variables and their roles 
-rec_obj <- recipe(target ~ ., data=tidy_data)
-rec_obj <- rec_obj %>%
+recipe_obj <- recipe(target ~ ., data=tidy_data)
+recipe_obj <- recipe_obj %>%
     add_role(id, new_role="id variable") %>%
     add_role(set, new_role="splitting variable")
 # 2.2 Preprocessing Steps
-rec_obj <- rec_obj %>% 
+recipe_obj <- recipe_obj %>% 
     # 2.2.1 Individual transformations for skewness and other issues
     # 2.2.1.1 Yeo-Johnson Transformation
     step_YeoJohnson(all_numeric(), -id, na.rm=TRUE) %>% 
@@ -108,16 +119,97 @@ rec_obj <- rec_obj %>%
     # 2.2.2 Creating Dummy Variables
     step_dummy(all_nominal(), -set)
 # 2.3 Estimate the recipe statistics
-rec_obj <- rec_obj %>% prep(training=tidy_data)
+recipe_obj <- recipe_obj %>% prep(training=tidy_data)
 # 2.4 Apply the recipe to the data set
-tidy_data = bake(rec_obj, newdata=tidy_data)
+tidy_data = bake(recipe_obj, newdata=tidy_data)
   
 options(na.action='na.omit')
-#summary(rec_obj)
 ``` 
 
-
 # Building an AutoEncoder
+
+
+# Define a Simple 5-fold Cross Validation 
+
+1. Revert back to the original train/test split
+2. Create a 5-Fold CV object from the train set
+
+```{r split_the_data}
+# Revert back to the original train/test split
+tidy_train = tidy_data %>% filter(set %in% "train") %>% select(-set)
+tidy_test = tidy_data %>% filter(set %in% "test") %>% select(-set)
+  
+# Create a 5-Fold CV object from the train set
+set.seed(1309)
+rsample_obj <- vfold_cv(tidy_train, V=5, repeats=1)
+```
+
+# Modeling
+
+First, for convenience, we create a formula object that will be used later:
+
+```{r modeling_formula}
+model_formula <- paste(y_name,"~ . -id")
+```
+
+Second, we create a wrapper function that will, for each resample:
+
+1. obtain the analysis data set (i.e. the 80% used for modeling)
+2. fit a lightgbm model
+3. predict the assessment data (the other 20% not used for the model) using the 
+`broom` package
+4. determine if each sample was predicted correctly.
+  
+```{r modeling}
+#' @param splits is the `rsplit` object with the 80/20 partition
+holdout_results <- function(splits, ...) {
+    # Get the data sets
+    tidy_analysis = analysis(splits)
+    tidy_assessment = assessment(splits)
+    # Fit the model to the 80%
+    mod <- glm(..., data=tidy_analysis, family=binomial)
+    # Predict the other 20%
+    Class1 = predict.glm(mod, newdata=tidy_assessment, type="response")
+    Class2 = 1-Class1
+    res = data.frame(truth=factor(tidy_assessment[[y_name]]),
+                     Class1=Class1, Class2=Class2)
+    #   truth   Class1          Class2
+    # 1 FALSE   1.474315e-11    1.00000000
+    # 2 FALSE   6.876193e-01    0.31238066
+    # 3 FALSE   2.220446e-16    1.00000000
+    # 4 FALSE   2.220446e-16    1.00000000
+    return(res)
+}# holdout_results()
+```
+
+```{r modeling_insanity_check, eval=FALSE, message=TRUE, warning=TRUE, include=FALSE}
+single_model <- holdout_results(rsample_obj$splits[[1]],  model_formula)
+roc_auc(single_model, truth=truth, Class1)
+```
+
+# Model Assessment
+
+```{r model_evaluation, message=FALSE, warning=FALSE}
+rsample_obj$results <- map(rsample_obj$splits,
+                      holdout_results,
+                      model_formula)
+```
+
+## Calculate the Gini Coefficient
+
+```{r AUC}
+rsample_obj$AUC = map_dbl(rsample_obj$results, roc_auc, truth=truth, Class1)
+rsample_obj$AUC = ifelse(rsample_obj$AUC>0.5,rsample_obj$AUC,1-rsample_obj$AUC)
+rsample_obj$Gini = rsample_obj$AUC * 2 - 1
+
+summary(rsample_obj$Gini)
+```
+
+Random Forest Benchmark: 0.24529
+
+
+
+
 
 https://docs.google.com/document/d/1tosvfWMkfW1-UkEQ1LL66PlFTmVZfXkbP0Dl1x5KcvA/edit#
 https://www.kaggle.com/c/porto-seguro-safe-driver-prediction/discussion/44629
